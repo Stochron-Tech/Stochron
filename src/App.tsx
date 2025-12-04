@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './styles/globals.css';
-import { Card } from './components/ui/card';
-import { Activity, TrendingUp, Shield, Map, FileText, Calendar, BarChart, Zap, Menu, BarChart3, BookOpen, Target } from 'lucide-react';
+import { Activity, TrendingUp, Shield, Map, Calendar, BarChart, Zap, Menu, BarChart3, BookOpen } from 'lucide-react';
 import { Button } from './components/ui/button';
 import ModelIntroduction from './components/ModelIntroduction';
 import ForecastingEngine from './components/ForecastingEngine';
@@ -11,6 +10,8 @@ import RiskExposureMap from './components/RiskExposureMap';
 import MacroCorrelationEngineEnhanced from './components/MacroCorrelationEngineEnhanced';
 import EventTimelineTracker from './components/EventTimelineTracker';
 import ShockSimulator from './components/ShockSimulator';
+import api, { API_BASE } from "./api";
+import Login from "./components/Login";
 
 const modules = [
   { id: 'introduction', name: 'Platform Overview', icon: BookOpen },
@@ -27,6 +28,25 @@ export default function App() {
   const [activeModule, setActiveModule] = useState('introduction');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  // Bootstrap CSRF cookie
+  useEffect(() => {
+    fetch(`${API_BASE}/api/csrf/`, {
+      method: "GET",
+      credentials: "include",
+    }).catch(console.error);
+    // Attempt to fetch current session
+    api.get("/api/me/").then(() => {
+      setIsLoggedIn(true);
+    }).catch(() => {
+      setIsLoggedIn(false);
+    });
+  }, []);
+
+  // Optional: expose logout via header/menu later
+
+
   const renderModule = () => {
     switch (activeModule) {
       case 'introduction': return <ModelIntroduction />;
@@ -40,6 +60,10 @@ export default function App() {
       default: return <ModelIntroduction />;
     }
   };
+
+  if (!isLoggedIn) {
+    return <Login onLoggedIn={() => setIsLoggedIn(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-background dark">
