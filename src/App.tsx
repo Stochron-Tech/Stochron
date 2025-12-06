@@ -1,34 +1,55 @@
-import { useEffect, useState } from 'react';
-import './styles/globals.css';
-import { Activity, TrendingUp, Shield, Map, Calendar, BarChart, Zap, Menu, BarChart3, BookOpen } from 'lucide-react';
-import { Button } from './components/ui/button';
-import ModelIntroduction from './components/ModelIntroduction';
-import ForecastingEngine from './components/ForecastingEngine';
-import ForebodingLagModule from './components/ForebodingLagModule';
-import SupplyChainVulnerability from './components/SupplyChainVulnerability';
-import RiskExposureMap from './components/RiskExposureMap';
-import MacroCorrelationEngineEnhanced from './components/MacroCorrelationEngineEnhanced';
-import EventTimelineTracker from './components/EventTimelineTracker';
-import ShockSimulator from './components/ShockSimulator';
+import { useEffect, useState } from "react";
+import { TopBar } from "./components/TopBar";
+import { ScenarioPanel } from "./components/ScenarioPanel";
+import { ForecastingEngine } from "./components/modules/ForecastingEngine";
+import { SentimentEngine } from "./components/modules/SentimentEngine";
+import { GeopoliticalMap } from "./components/modules/GeopoliticalMap";
+import { SupplyChainTracker } from "./components/modules/SupplyChainTracker";
+import { PolicyTracker } from "./components/modules/PolicyTracker";
+import { VolatilityMonitor } from "./components/modules/VolatilityMonitor";
+import { MacroCorrelation } from "./components/modules/MacroCorrelation";
+import { ScenarioSimulator } from "./components/modules/ScenarioSimulator";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "./components/ui/dialog";
+import { ForecastingEngineDetailed } from "./components/detailed/ForecastingEngineDetailed";
+import { SentimentEngineDetailed } from "./components/detailed/SentimentEngineDetailed";
+import { PolicyTrackerDetailed } from "./components/detailed/PolicyTrackerDetailed";
+import { ShockSimulatorDetailed } from "./components/detailed/ShockSimulatorDetailed";
+import { MacroCorrelationDetailed } from "./components/detailed/MacroCorrelationDetailed";
+import { VolatilityMonitorDetailed } from "./components/detailed/VolatilityMonitorDetailed";
+import { SupplyChainTrackerDetailed } from "./components/detailed/SupplyChainTrackerDetailed";
+import { GeopoliticalMapDetailed } from "./components/detailed/GeopoliticalMapDetailed";
+
 import api, { API_BASE } from "./api";
 import Login from "./components/Login";
 
-const modules = [
-  { id: 'introduction', name: 'Platform Overview', icon: BookOpen },
-  { id: 'forecasting', name: 'Forecasting Engine', icon: Activity },
-  { id: 'foreboding', name: 'Foreboding-Lag Module', icon: TrendingUp },
-  { id: 'risk-exposure', name: 'Risk Exposure Map', icon: Map },
-  { id: 'supply-chain', name: 'Supply Chain Vulnerability', icon: Shield },
-  { id: 'macro-correlation', name: 'Macro-Correlation Engine', icon: BarChart },
-  { id: 'events', name: 'Event Timeline Tracker', icon: Calendar },
-  { id: 'simulation', name: 'Shock Simulator', icon: Zap },
-];
+export type ScenarioType =
+  | "baseline"
+  | "russia-ukraine"
+  | "us-china"
+  | "red-sea"
+  | "custom";
+export type ExpandedModule =
+  | "forecasting"
+  | "sentiment"
+  | "geopolitical"
+  | "supplychain"
+  | "policy"
+  | "volatility"
+  | "macro"
+  | "simulator"
+  | null;
+
 
 export default function App() {
-  const [activeModule, setActiveModule] = useState('introduction');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  // Set to false for production, true for dev bypass
+  const testing = true;
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(testing);
 
   // Bootstrap CSRF cookie
   useEffect(() => {
@@ -36,148 +57,322 @@ export default function App() {
       method: "GET",
       credentials: "include",
     }).catch(console.error);
-    // Attempt to fetch current session
-    api.get("/api/me/").then(() => {
-      setIsLoggedIn(true);
-    }).catch(() => {
-      setIsLoggedIn(false);
-    });
-  }, []);
-
-  // Optional: expose logout via header/menu later
-
-
-  const renderModule = () => {
-    switch (activeModule) {
-      case 'introduction': return <ModelIntroduction />;
-      case 'forecasting': return <ForecastingEngine />;
-      case 'foreboding': return <ForebodingLagModule />;
-      case 'risk-exposure': return <RiskExposureMap />;
-      case 'supply-chain': return <SupplyChainVulnerability />;
-      case 'macro-correlation': return <MacroCorrelationEngineEnhanced />;
-      case 'events': return <EventTimelineTracker />;
-      case 'simulation': return <ShockSimulator />;
-      default: return <ModelIntroduction />;
+    // Only check session if not testing
+    if (!testing) {
+      api.get("/api/me/").then(() => {
+        setIsLoggedIn(true);
+      }).catch(() => {
+        setIsLoggedIn(false);
+      });
     }
-  };
+  }, [testing]);
+
+  const [selectedStock, setSelectedStock] = useState("BA");
+  const [dateRange, setDateRange] = useState({
+    start: "2024-01-01",
+    end: "2025-10-26",
+  });
+  const [activeScenario, setActiveScenario] =
+    useState<ScenarioType>("baseline");
+  const [customShock, setCustomShock] = useState({
+    freight: 0,
+    sentiment: 0,
+    sanctions: 0,
+  });
+  const [expandedModule, setExpandedModule] =
+    useState<ExpandedModule>(null);
 
   if (!isLoggedIn) {
     return <Login onLoggedIn={() => setIsLoggedIn(true)} />;
   }
 
   return (
-    <div className="min-h-screen bg-background dark">
-      {/* Professional Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-50 shadow-lg">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-primary-foreground" />
+    <div className="min-h-screen bg-[#0a0e1a] text-gray-100">
+      <TopBar
+        selectedStock={selectedStock}
+        setSelectedStock={setSelectedStock}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+      />
+
+      <div className="flex">
+        {/* Left Sidebar - Scenario Panel */}
+        <div className="w-80 border-r border-gray-800">
+          <ScenarioPanel
+            activeScenario={activeScenario}
+            setActiveScenario={setActiveScenario}
+            customShock={customShock}
+            setCustomShock={setCustomShock}
+          />
+        </div>
+
+        {/* Main Dashboard Grid */}
+        <div className="flex-1 p-8 pr-8">
+          {/* Report Header */}
+          <div className="mb-6 border-b border-gray-700 pb-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-xl text-gray-100">
+                  AI-Driven Geopolitical & Macroeconomic Risk
+                  Analysis
+                </h1>
+                <p className="mt-1 text-sm text-gray-400">
+                  Real-time assessment of global events impact
+                  on {selectedStock} | Generated:{" "}
+                  {new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+              <div className="rounded-lg border border-gray-700 bg-[#161b22] px-4 py-2">
+                <div className="text-xs text-gray-400">
+                  Active Scenario
                 </div>
-                <div>
-                  <h1 className="text-foreground">
-                    Financial Markets Intelligence
-                  </h1>
-                  <p className="text-muted-foreground text-sm">
-                    Apple Inc. (AAPL) Strategic Analysis
-                  </p>
+                <div className="mt-0.5 text-sm text-cyan-400">
+                  {activeScenario === "baseline" &&
+                    "Baseline Conditions"}
+                  {activeScenario === "russia-ukraine" &&
+                    "Russia-Ukraine War"}
+                  {activeScenario === "us-china" &&
+                    "US-China Trade Tensions"}
+                  {activeScenario === "red-sea" &&
+                    "Red Sea Shipping Attacks"}
+                  {activeScenario === "custom" &&
+                    "Custom Shock Scenario"}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="hidden sm:block text-muted-foreground">
-                {new Date().toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
+          </div>
+
+          <div className="space-y-8">
+            {/* Section 1: Forecasting & Sentiment Analysis */}
+            <div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
+                <h2 className="text-xs text-cyan-400/70 uppercase tracking-wider">
+                  Section I: Predictive Analytics
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-l from-cyan-500/50 to-transparent"></div>
+              </div>
+              <div className="grid grid-cols-2 gap-8">
+                <div
+                  onClick={() =>
+                    setExpandedModule("forecasting")
+                  }
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                >
+                  <ForecastingEngine
+                    stock={selectedStock}
+                    scenario={activeScenario}
+                    customShock={customShock}
+                  />
+                </div>
+                <div
+                  onClick={() => setExpandedModule("sentiment")}
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                >
+                  <SentimentEngine
+                    stock={selectedStock}
+                    scenario={activeScenario}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Geopolitical & Supply Chain Risk */}
+            <div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-gradient-to-r from-amber-500/50 to-transparent"></div>
+                <h2 className="text-xs text-amber-400/70 uppercase tracking-wider">
+                  Section II: Geopolitical & Operational Risk
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-l from-amber-500/50 to-transparent"></div>
+              </div>
+              <div className="grid grid-cols-2 gap-8">
+                <div
+                  onClick={() =>
+                    setExpandedModule("geopolitical")
+                  }
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                >
+                  <GeopoliticalMap
+                    stock={selectedStock}
+                    scenario={activeScenario}
+                  />
+                </div>
+                <div
+                  onClick={() =>
+                    setExpandedModule("supplychain")
+                  }
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                >
+                  <SupplyChainTracker
+                    stock={selectedStock}
+                    scenario={activeScenario}
+                    customShock={customShock}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Policy & Market Dynamics */}
+            <div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-gradient-to-r from-green-500/50 to-transparent"></div>
+                <h2 className="text-xs text-green-400/70 uppercase tracking-wider">
+                  Section III: Policy & Market Structure
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-l from-green-500/50 to-transparent"></div>
+              </div>
+              <div className="grid grid-cols-2 gap-8">
+                <div
+                  onClick={() => setExpandedModule("policy")}
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                >
+                  <PolicyTracker />
+                </div>
+                <div
+                  onClick={() =>
+                    setExpandedModule("volatility")
+                  }
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                >
+                  <VolatilityMonitor
+                    stock={selectedStock}
+                    scenario={activeScenario}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Macro Factors & Scenario Analysis */}
+            <div>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="h-px flex-1 bg-gradient-to-r from-purple-500/50 to-transparent"></div>
+                <h2 className="text-xs text-purple-400/70 uppercase tracking-wider">
+                  Section IV: Macroeconomic Analysis &
+                  Simulation
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-l from-purple-500/50 to-transparent"></div>
+              </div>
+              <div className="grid grid-cols-2 gap-8">
+                <div
+                  onClick={() => setExpandedModule("macro")}
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                >
+                  <MacroCorrelation stock={selectedStock} />
+                </div>
+                <div
+                  onClick={() => setExpandedModule("simulator")}
+                  className="cursor-pointer transition-transform hover:scale-[1.01]"
+                >
+                  <ScenarioSimulator
+                    stock={selectedStock}
+                    activeScenario={activeScenario}
+                    customShock={customShock}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:sticky top-[89px] left-0 w-64 h-[calc(100vh-89px)] bg-card border-r border-border transition-transform duration-300 z-40 overflow-y-auto`}>
-          <div className="p-6">
-            <div className="mb-6">
-              <h2 className="text-primary text-sm mb-1">Analysis Modules</h2>
-              <p className="text-muted-foreground text-xs">Select a module to view insights</p>
-            </div>
-            <nav className="space-y-1">
-              {modules.map((module) => {
-                const Icon = module.icon;
-                const isActive = activeModule === module.id;
-                return (
-                  <button
-                    key={module.id}
-                    onClick={() => {
-                      setActiveModule(module.id);
-                      if (window.innerWidth < 1024) setSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all rounded-lg ${
-                      isActive 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
-                        : 'text-muted-foreground hover:bg-secondary'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
-                    <span className="text-sm">{module.name}</span>
-                  </button>
-                );
-              })}
-            </nav>
-            <div className="mt-8 p-4 bg-secondary border border-border rounded-lg">
-              <div className="text-primary text-xs mb-3">System Status</div>
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <div className="flex justify-between items-center">
-                  <span>Data Currency</span>
-                  <span className="text-green-400">Current</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Active Modules</span>
-                  <span className="text-green-400">8/8</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Last Update</span>
-                  <span className="text-foreground">Nov 10, 2024</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Overlay for mobile */}
-        {sidebarOpen && (
-          <div 
-            className="lg:hidden fixed inset-0 bg-black/40 z-30 top-[89px]"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Main Content Area */}
-        <main className="flex-1 p-6 lg:p-8 min-h-[calc(100vh-89px)] bg-background">
-          <div className="mb-6">
-            <h2 className="text-foreground mb-2">
-              {modules.find(m => m.id === activeModule)?.name}
-            </h2>
-            <div className="h-1 w-16 bg-primary rounded-full"></div>
-          </div>
-          {renderModule()}
-        </main>
       </div>
+
+      {/* Expanded Module Dialogs */}
+      <Dialog
+        open={expandedModule !== null}
+        onOpenChange={() => setExpandedModule(null)}
+      >
+        <DialogContent className="w-screen max-w-screen h-screen max-h-screen overflow-y-auto bg-[#0d1117] border-0 text-gray-100 p-0 rounded-none">
+          <DialogTitle className="sr-only">
+            {expandedModule === "forecasting"
+              ? "Forecasting Engine Detailed View"
+              : expandedModule === "sentiment"
+                ? "Sentiment Analysis Detailed View"
+                : expandedModule === "policy"
+                  ? "Policy Tracker Detailed View"
+                  : expandedModule === "simulator"
+                    ? "Scenario Simulator Detailed View"
+                    : expandedModule === "macro"
+                      ? "Macro Correlation Detailed View"
+                      : expandedModule === "volatility"
+                        ? "Volatility Monitor Detailed View"
+                        : expandedModule === "supplychain"
+                          ? "Supply Chain Tracker Detailed View"
+                          : expandedModule === "geopolitical"
+                            ? "Geopolitical Map Detailed View"
+                            : "Module Detailed View"}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {expandedModule === "forecasting"
+              ? "Detailed time-series forecasting analysis using multiple methodologies from 2000-2026"
+              : expandedModule === "sentiment"
+                ? "Detailed sentiment analysis processing 2,847 trade documents from 2000-2023"
+                : expandedModule === "policy"
+                  ? "Detailed analysis of major upcoming policy events that could reshape geopolitical variables"
+                  : expandedModule === "simulator"
+                    ? "Interactive scenario simulation for analyzing geopolitical shock impacts"
+                    : expandedModule === "macro"
+                      ? "Detailed macroeconomic correlation analysis and indicators"
+                      : expandedModule === "volatility"
+                        ? "Detailed volatility monitoring and risk analysis"
+                        : expandedModule === "supplychain"
+                          ? "Detailed supply chain vulnerability tracking and analysis"
+                          : expandedModule === "geopolitical"
+                            ? "Comprehensive geopolitical exposure analysis across multiple dimensions"
+                            : "Detailed analysis and interactive visualization for the selected module"}
+          </DialogDescription>
+          {expandedModule === "forecasting" && (
+            <ForecastingEngineDetailed
+              stock={selectedStock}
+              scenario={activeScenario}
+              customShock={customShock}
+            />
+          )}
+          {expandedModule === "sentiment" && (
+            <SentimentEngineDetailed
+              stock={selectedStock}
+              scenario={activeScenario}
+            />
+          )}
+          {expandedModule === "policy" && (
+            <PolicyTrackerDetailed />
+          )}
+          {expandedModule === "simulator" && (
+            <ShockSimulatorDetailed
+              stock={selectedStock}
+              activeScenario={activeScenario}
+              customShock={customShock}
+              setCustomShock={setCustomShock}
+            />
+          )}
+          {expandedModule === "macro" && (
+            <MacroCorrelationDetailed stock={selectedStock} />
+          )}
+          {expandedModule === "volatility" && (
+            <VolatilityMonitorDetailed
+              stock={selectedStock}
+              scenario={activeScenario}
+            />
+          )}
+          {expandedModule === "supplychain" && (
+            <SupplyChainTrackerDetailed
+              stock={selectedStock}
+              scenario={activeScenario}
+              customShock={customShock}
+            />
+          )}
+          {expandedModule === "geopolitical" && (
+            <GeopoliticalMapDetailed
+              stock={selectedStock}
+              scenario={activeScenario}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

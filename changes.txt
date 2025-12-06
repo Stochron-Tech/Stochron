@@ -1,0 +1,25 @@
+The following are the inputs (for user):
+- Scenario selection
+- Forecasting methodology (eg: supply chain forcasting, ARIMA, Event tracking)
+    Forcasting methodology brings in different information to make the prediction.
+- Duration of past data from which they can make the prediction
+
+Output will be:
+- Time series of the values in the future and the associated analytics
+    This is the prediction
+- Link to the explanation of the prediction
+- Link to the source of the data
+- Link to the source of the forecasting methodology
+    [all the links are the existing pages: the user can refer to these for explainability]
+
+Hence, this is what you need to think of when buliding the modules:
+1. How it is going to make the prediction
+    a. Take in time series from past
+    b. Take in scenario info
+2. The list of hyperparameters that the user can play around with
+3. How the explainability with the build in [how we are going to generate the explanation page]
+
+
+
+
+[Once changed made, delete this file]
