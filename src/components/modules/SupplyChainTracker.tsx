@@ -27,6 +27,8 @@ export function SupplyChainTracker({
   customShock,
 }: SupplyChainTrackerProps) {
   // Calculate SCVI based on scenario
+  stock;
+  
   const calculateSCVI = () => {
     let base = 42;
 

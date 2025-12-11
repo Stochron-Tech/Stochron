@@ -27,6 +27,9 @@ export function ScenarioSimulator({
   customShock,
 }: ScenarioSimulatorProps) {
   // Calculate impact scores for each module based on scenario
+
+  stock;
+  
   const calculateModuleImpacts = () => {
     const impacts = {
       baseline: {

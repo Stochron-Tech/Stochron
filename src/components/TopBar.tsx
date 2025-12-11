@@ -20,6 +20,7 @@ export function TopBar({
   dateRange,
   setDateRange,
 }: TopBarProps) {
+  setDateRange;
   return (
     <div className="border-b border-gray-800 bg-[#0d1117] px-6 py-4">
       <div className="flex items-center justify-between">

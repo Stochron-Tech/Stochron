@@ -26,6 +26,8 @@ export function VolatilityMonitor({
   scenario,
 }: VolatilityMonitorProps) {
   // Generate volatility data
+  stock;
+  
   const generateVolatilityData = () => {
     const data = [];
     const today = new Date("2025-10-26");

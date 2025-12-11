@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, AlertCircle, TrendingDown, TrendingUp, ChevronRight, ExternalLink, FileText, Users, DollarSign, Target, Clock, Building2, Plane } from "lucide-react";
+import { Calendar, AlertCircle, TrendingDown, TrendingUp, ChevronRight, ExternalLink, FileText, Users, Target, Clock, Building2, Plane } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 

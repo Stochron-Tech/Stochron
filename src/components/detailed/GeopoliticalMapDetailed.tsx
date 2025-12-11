@@ -16,8 +16,6 @@ import {
   Award,
 } from "lucide-react";
 import {
-  BarChart,
-  Bar,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
@@ -27,7 +25,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  Cell,
   LineChart,
   Line,
   CartesianGrid,
@@ -43,8 +40,8 @@ export function GeopoliticalMapDetailed({
   stock,
   scenario,
 }: GeopoliticalMapDetailedProps) {
-  const [selectedRegion, setSelectedRegion] =
-    useState<string>("all");
+  // const [selectedRegion, setSelectedRegion] =
+  //   useState<string>("all");
   const [selectedDimension, setSelectedDimension] = useState<
     "revenue" | "supply" | "operations" | "customers"
   >("revenue");

@@ -1,7 +1,7 @@
 import { MessageSquare } from "lucide-react";
 import {
   Line,
-  LineChart,
+  // LineChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -9,7 +9,7 @@ import {
   YAxis,
   Legend,
   ComposedChart,
-  Bar,
+  // Bar,
 } from "recharts";
 import type { ScenarioType } from "../../App";
 
@@ -23,6 +23,8 @@ export function SentimentEngine({
   scenario,
 }: SentimentEngineProps) {
   // Generate mock sentiment data
+  stock;
+  
   const generateSentimentData = () => {
     const data = [];
     const today = new Date("2025-10-26");

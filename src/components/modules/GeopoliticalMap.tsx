@@ -8,7 +8,7 @@ interface GeopoliticalMapProps {
 }
 
 export function GeopoliticalMap({
-  stock,
+  // stock,
   scenario,
 }: GeopoliticalMapProps) {
   // Regional exposure data

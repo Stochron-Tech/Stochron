@@ -1,7 +1,7 @@
 import { TrendingUp } from "lucide-react";
 import {
   Area,
-  AreaChart,
+  // AreaChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,

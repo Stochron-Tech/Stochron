@@ -16,12 +16,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../ui/tabs";
+// import {
+//   Tabs,
+//   TabsContent,
+//   TabsList,
+//   TabsTrigger,
+// } from "../ui/tabs";
 import { Textarea } from "../ui/textarea";
 
 interface ShockSimulatorDetailedProps {
@@ -74,6 +74,10 @@ export function ShockSimulatorDetailed({
   const [scenarioDescription, setScenarioDescription] =
     useState("");
   const [generatedReport, setGeneratedReport] = useState("");
+
+  activeScenario;
+  customShock;
+  setCustomShock;
 
   // Comprehensive variable library
   const variableLibrary: Variable[] = [

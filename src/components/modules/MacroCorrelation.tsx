@@ -8,6 +8,8 @@ export function MacroCorrelation({
   stock,
 }: MacroCorrelationProps) {
   // Correlation matrix data with regression coefficients
+  stock;
+  
   const correlations = [
     {
       variable: "GDP Growth",

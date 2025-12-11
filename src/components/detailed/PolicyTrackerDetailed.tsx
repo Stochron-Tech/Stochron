@@ -9,12 +9,12 @@ import {
   Info,
 } from "lucide-react";
 import { Badge } from "../ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../ui/tabs";
+// import {
+//   Tabs,
+//   TabsContent,
+//   TabsList,
+//   TabsTrigger,
+// } from "../ui/tabs";
 
 interface PolicyEvent {
   id: string;

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import {
   MessageSquare,
-  ChevronRight,
-  ChevronDown,
+  // ChevronRight,
+  // ChevronDown,
   FileText,
 } from "lucide-react";
 import {
   Line,
-  LineChart,
+  // LineChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -38,11 +38,16 @@ export function SentimentEngineDetailed({
     string[]
   >([]);
 
+  setExpandedCategories;
+
   const stockUpper = stock.toUpperCase();
   const scenarioUpper = scenario
     ? scenario.charAt(0).toUpperCase() + scenario.slice(1)
     : "Base";
 
+  expandedCategories;
+  stockUpper;
+  scenarioUpper;
   // Generate sentiment and export data 2000-2023
   const generateSentimentExportData = () => {
     const data = [];
@@ -489,13 +494,13 @@ export function SentimentEngineDetailed({
     },
   };
 
-  const toggleCategory = (category: string) => {
-    setExpandedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category],
-    );
-  };
+  // const toggleCategory = (category: string) => {
+  //   setExpandedCategories((prev) =>
+  //     prev.includes(category)
+  //       ? prev.filter((c) => c !== category)
+  //       : [...prev, category],
+  //   );
+  // };
 
   return (
     <div className="space-y-8 p-8">

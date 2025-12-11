@@ -49,6 +49,11 @@ export function ForecastingEngineDetailed({
     ? scenario.charAt(0).toUpperCase() + scenario.slice(1)
     : "Base";
 
+  customShock;
+  stockUpper;
+  scenarioUpper;
+
+
   // Generate historical data 2000-2023
   const generateHistoricalData = () => {
     const data = [];

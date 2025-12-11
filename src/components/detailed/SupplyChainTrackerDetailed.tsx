@@ -8,8 +8,8 @@ import {
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
+  // LineChart,
+  // Line,
   CartesianGrid,
   XAxis,
   YAxis,
