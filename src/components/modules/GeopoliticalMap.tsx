@@ -1,15 +1,18 @@
 import { Globe } from "lucide-react";
 import type { ScenarioType } from "../../App";
+import type { ScenarioImpact } from "../../utils/scenario";
 import { Progress } from "../ui/progress";
 
 interface GeopoliticalMapProps {
   stock: string;
   scenario: ScenarioType;
+  impact: ScenarioImpact;
 }
 
 export function GeopoliticalMap({
   // stock,
   scenario,
+  impact,
 }: GeopoliticalMapProps) {
   // Regional exposure data
   const regions = [
@@ -20,10 +23,8 @@ export function GeopoliticalMap({
       politicalRisk:
         scenario === "baseline"
           ? 25
-          : scenario === "us-china"
-            ? 55
-            : 30,
-      regulatoryRisk: scenario === "baseline" ? 40 : 65,
+          : 25 + impact.geopolitical * 0.4,
+      regulatoryRisk: scenario === "baseline" ? 40 : 40 + impact.geopolitical * 0.5,
       color: "#06b6d4",
     },
     {
@@ -33,15 +34,11 @@ export function GeopoliticalMap({
       politicalRisk:
         scenario === "baseline"
           ? 35
-          : scenario === "russia-ukraine"
-            ? 75
-            : 45,
+          : 35 + impact.geopolitical * 0.6,
       regulatoryRisk:
         scenario === "baseline"
           ? 45
-          : scenario === "russia-ukraine"
-            ? 70
-            : 50,
+          : 45 + impact.geopolitical * 0.5,
       color: "#8b5cf6",
     },
     {
@@ -51,15 +48,11 @@ export function GeopoliticalMap({
       politicalRisk:
         scenario === "baseline"
           ? 40
-          : scenario === "us-china"
-            ? 80
-            : 50,
+          : 40 + impact.geopolitical * 0.7,
       regulatoryRisk:
         scenario === "baseline"
           ? 35
-          : scenario === "us-china"
-            ? 65
-            : 40,
+          : 35 + impact.geopolitical * 0.5,
       color: "#f59e0b",
     },
     {
@@ -69,23 +62,19 @@ export function GeopoliticalMap({
       politicalRisk:
         scenario === "baseline"
           ? 60
-          : scenario === "red-sea"
-            ? 85
-            : 70,
+          : 60 + impact.geopolitical * 0.6,
       regulatoryRisk:
         scenario === "baseline"
           ? 50
-          : scenario === "red-sea"
-            ? 75
-            : 55,
+          : 50 + impact.geopolitical * 0.6,
       color: "#ef4444",
     },
     {
       name: "Latin America",
       revenue: 3,
       suppliers: 2,
-      politicalRisk: scenario === "baseline" ? 45 : 55,
-      regulatoryRisk: scenario === "baseline" ? 40 : 50,
+      politicalRisk: scenario === "baseline" ? 45 : 45 + impact.geopolitical * 0.3,
+      regulatoryRisk: scenario === "baseline" ? 40 : 40 + impact.geopolitical * 0.3,
       color: "#10b981",
     },
   ];

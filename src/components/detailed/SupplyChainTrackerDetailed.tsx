@@ -35,21 +35,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
+import type { ScenarioImpact } from "../../utils/scenario";
 
 interface SupplyChainTrackerDetailedProps {
   stock: string;
   scenario: ScenarioType;
-  customShock: {
-    freight: number;
-    sentiment: number;
-    sanctions: number;
-  };
+  customShock: Record<string, number>;
+  impact: ScenarioImpact;
 }
 
 export function SupplyChainTrackerDetailed({
   stock,
   scenario,
   customShock,
+  impact,
 }: SupplyChainTrackerDetailedProps) {
   const [selectedCountry, setSelectedCountry] = useState<
     string | null
@@ -58,34 +57,12 @@ export function SupplyChainTrackerDetailed({
 
   // Calculate comprehensive SCVI
   const calculateDetailedSCVI = () => {
-    let hhi = 25;
-    let freight = 15;
-    let energy = 20;
-    let trade = 15;
-    let political = 10;
 
-    if (scenario === "russia-ukraine") {
-      hhi = 45;
-      freight = 35;
-      energy = 50;
-      trade = 45;
-      political = 48;
-    } else if (scenario === "us-china") {
-      hhi = 38;
-      freight = 28;
-      energy = 25;
-      trade = 42;
-      political = 35;
-    } else if (scenario === "red-sea") {
-      hhi = 30;
-      freight = 52;
-      energy = 42;
-      trade = 38;
-      political = 35;
-    } else if (scenario === "custom") {
-      freight = 15 + customShock.freight * 0.5;
-      trade = 15 + customShock.sanctions * 0.4;
-    }
+    let hhi = 25 + (scenario === "baseline" ? 0 : impact.supply_chain * 0.3);
+    let freight = 15 + (customShock.freight ?? 0) * 0.4;
+    let energy = 20 + (customShock.sentiment ?? 0) * 0.05;
+    let trade = 15 + (scenario === "baseline" ? 0 : impact.supply_chain * 0.25);
+    let political = 10 + (customShock.sanctions ?? 0) * 0.2;
 
     const total =
       hhi * 0.25 +

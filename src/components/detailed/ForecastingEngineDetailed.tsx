@@ -24,21 +24,20 @@ import {
 } from "../ui/tabs";
 import { Badge } from "../ui/badge";
 import type { ScenarioType } from "../../App";
+import type { ScenarioImpact } from "../../utils/scenario";
 
 interface ForecastingEngineDetailedProps {
   stock: string;
   scenario: ScenarioType;
-  customShock: {
-    freight: number;
-    sentiment: number;
-    sanctions: number;
-  };
+  customShock: Record<string, number>;
+  impact: ScenarioImpact;
 }
 
 export function ForecastingEngineDetailed({
   stock,
   scenario,
   customShock,
+  impact,
 }: ForecastingEngineDetailedProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<
     string | null

@@ -16,11 +16,13 @@ import type { ScenarioType } from "../../App";
 interface SentimentEngineProps {
   stock: string;
   scenario: ScenarioType;
+  impact: ScenarioImpact;
 }
 
 export function SentimentEngine({
   stock,
   scenario,
+  impact,
 }: SentimentEngineProps) {
   // Generate mock sentiment data
   stock;
@@ -37,12 +39,9 @@ export function SentimentEngine({
       let price = 175 + Math.sin(i / 30) * 15;
 
       // Apply scenario-based sentiment shifts
-      if (scenario === "russia-ukraine" && i > -30) {
-        sentiment -= 0.5;
-      } else if (scenario === "us-china" && i > -30) {
-        sentiment -= 0.3;
-      } else if (scenario === "red-sea" && i > -30) {
-        sentiment -= 0.2;
+      // Apply scenario-based sentiment shifts using aggregated impact
+      if (scenario !== "baseline" && i > -30) {
+        sentiment += impact.sentiment * 0.01;
       }
 
       data.push({

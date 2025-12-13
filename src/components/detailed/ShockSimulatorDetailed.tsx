@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { ScenarioType } from "../../App";
+import type { ScenarioImpact } from "../../utils/scenario";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 import {
@@ -27,16 +28,9 @@ import { Textarea } from "../ui/textarea";
 interface ShockSimulatorDetailedProps {
   stock: string;
   activeScenario: ScenarioType;
-  customShock: {
-    freight: number;
-    sentiment: number;
-    sanctions: number;
-  };
-  setCustomShock: (shock: {
-    freight: number;
-    sentiment: number;
-    sanctions: number;
-  }) => void;
+  customShock: Record<string, number>;
+  setCustomShock: (shock: Record<string, number>) => void;
+  impact: ScenarioImpact;
 }
 
 interface Variable {

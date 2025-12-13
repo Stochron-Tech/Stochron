@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TopBar } from "./components/TopBar";
 import { ScenarioPanel } from "./components/ScenarioPanel";
 import { ForecastingEngine } from "./components/modules/ForecastingEngine";
@@ -26,13 +26,11 @@ import { GeopoliticalMapDetailed } from "./components/detailed/GeopoliticalMapDe
 
 import api, { API_BASE } from "./api";
 import Login from "./components/Login";
+import { useConfig } from "./hooks/useConfig";
+import { defaultsFromCustomShocks, deriveCustomShockFromSelection, deriveImpact, isBaseline } from "./utils/scenario";
+import type { ConfigResponse, ScenarioSelections } from "./types";
 
-export type ScenarioType =
-  | "baseline"
-  | "russia-ukraine"
-  | "us-china"
-  | "red-sea"
-  | "custom";
+export type ScenarioType = "baseline" | "custom";
 export type ExpandedModule =
   | "forecasting"
   | "sentiment"
@@ -46,10 +44,10 @@ export type ExpandedModule =
 
 
 export default function App() {
-
-  // Set to false for production, true for dev bypass
-  const testing = true;
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(testing);
+  const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === "true";
+  const { config, loading: configLoading, error: configError } = useConfig();
+  const [userId, setUserId] = useState<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(bypassAuth);
 
   // Bootstrap CSRF cookie
   useEffect(() => {
@@ -57,40 +55,95 @@ export default function App() {
       method: "GET",
       credentials: "include",
     }).catch(console.error);
-    // Only check session if not testing
-    if (!testing) {
-      api.get("/api/me/").then(() => {
-        setIsLoggedIn(true);
-      }).catch(() => {
-        setIsLoggedIn(false);
-      });
+    if (!bypassAuth) {
+      api
+        .get("/api/me/")
+        .then((resp) => {
+          setIsLoggedIn(true);
+          setUserId(resp.data.id);
+        })
+        .catch(() => {
+          setIsLoggedIn(false);
+        });
     }
-  }, [testing]);
+  }, [bypassAuth]);
 
-  const [selectedStock, setSelectedStock] = useState("BA");
+  const [selectedStockId, setSelectedStockId] = useState<number | null>(null);
   const [dateRange, setDateRange] = useState({
     start: "2024-01-01",
     end: "2025-10-26",
   });
-  const [activeScenario, setActiveScenario] =
-    useState<ScenarioType>("baseline");
-  const [customShock, setCustomShock] = useState({
-    freight: 0,
-    sentiment: 0,
-    sanctions: 0,
+  const [selection, setSelection] = useState<ScenarioSelections>({
+    geopolitical: [],
+    custom: {},
+    dateRange: { start: "2024-01-01", end: "2025-10-26" },
   });
+  const [activeScenario, setActiveScenario] = useState<ScenarioType>("baseline");
   const [expandedModule, setExpandedModule] =
     useState<ExpandedModule>(null);
+
+  // Initialize defaults when config arrives
+  useEffect(() => {
+    if (!config) return;
+    if (config.stocks.length && selectedStockId === null) {
+      setSelectedStockId(config.stocks[0].id);
+    }
+    const defaults = defaultsFromCustomShocks(config.custom_shocks);
+    setSelection((prev) => ({
+      ...prev,
+      custom: { ...defaults, ...prev.custom },
+    }));
+  }, [config, selectedStockId]);
+
+  // Derive custom shocks from geopolitical selections automatically
+  useEffect(() => {
+    if (!config) return;
+    const derived = deriveCustomShockFromSelection(
+      selection,
+      config.geopolitical_shocks,
+      config.custom_shocks,
+    );
+    setSelection((prev) => ({ ...prev, custom: derived }));
+    setActiveScenario(isBaseline({ ...selection, custom: derived }, config) ? "baseline" : "custom");
+  }, [selection.geopolitical, config]);
+
+  const activeLabel = useMemo(() => {
+    if (!config) return "Baseline";
+    if (selection.geopolitical.length === 0) return "Baseline";
+    const names = selection.geopolitical
+      .map((id) => config.geopolitical_shocks.find((s) => s.id === id)?.name)
+      .filter(Boolean);
+    return names.join(", ");
+  }, [selection.geopolitical, config]);
+
+  const impact = useMemo(() => {
+    if (!config) {
+      return { forecast: 0, sentiment: 0, geopolitical: 25, supply_chain: 40, volatility: 15 };
+    }
+    return deriveImpact(selection, config.geopolitical_shocks, config.custom_shocks);
+  }, [selection, config]);
 
   if (!isLoggedIn) {
     return <Login onLoggedIn={() => setIsLoggedIn(true)} />;
   }
 
+  if (configLoading) {
+    return <div className="p-8 text-gray-200">Loading configuration…</div>;
+  }
+
+  if (configError || !config) {
+    return <div className="p-8 text-red-400">Failed to load configuration: {configError}</div>;
+  }
+
+  const selectedStock = config.stocks.find((s) => s.id === selectedStockId);
+  const stockTicker = selectedStock?.ticker || "";
+
   return (
     <div className="min-h-screen bg-[#0a0e1a] text-gray-100">
       <TopBar
-        selectedStock={selectedStock}
-        setSelectedStock={setSelectedStock}
+        stocks={config.stocks}
+        selectedStockId={selectedStockId}
+        setSelectedStockId={(id) => setSelectedStockId(id)}
         dateRange={dateRange}
         setDateRange={setDateRange}
       />
@@ -99,10 +152,11 @@ export default function App() {
         {/* Left Sidebar - Scenario Panel */}
         <div className="w-80 border-r border-gray-800">
           <ScenarioPanel
-            activeScenario={activeScenario}
-            setActiveScenario={setActiveScenario}
-            customShock={customShock}
-            setCustomShock={setCustomShock}
+            selection={{ ...selection, dateRange }}
+            setSelection={(sel) => setSelection({ ...sel, dateRange })}
+            geopoliticalShocks={config.geopolitical_shocks}
+            customShockDefinitions={config.custom_shocks}
+            activeLabel={activeLabel || "Baseline"}
           />
         </div>
 
@@ -118,7 +172,7 @@ export default function App() {
                 </h1>
                 <p className="mt-1 text-sm text-gray-400">
                   Real-time assessment of global events impact
-                  on {selectedStock} | Generated:{" "}
+                  on {stockTicker || "N/A"} | Generated:{" "}
                   {new Date().toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -132,16 +186,7 @@ export default function App() {
                   Active Scenario
                 </div>
                 <div className="mt-0.5 text-sm text-cyan-400">
-                  {activeScenario === "baseline" &&
-                    "Baseline Conditions"}
-                  {activeScenario === "russia-ukraine" &&
-                    "Russia-Ukraine War"}
-                  {activeScenario === "us-china" &&
-                    "US-China Trade Tensions"}
-                  {activeScenario === "red-sea" &&
-                    "Red Sea Shipping Attacks"}
-                  {activeScenario === "custom" &&
-                    "Custom Shock Scenario"}
+                      {activeLabel || "Baseline"}
                 </div>
               </div>
             </div>
@@ -165,9 +210,10 @@ export default function App() {
                   className="cursor-pointer transition-transform hover:scale-[1.01]"
                 >
                   <ForecastingEngine
-                    stock={selectedStock}
+                    stock={stockTicker}
                     scenario={activeScenario}
-                    customShock={customShock}
+                    customShock={selection.custom}
+                    impact={impact}
                   />
                 </div>
                 <div
@@ -175,8 +221,9 @@ export default function App() {
                   className="cursor-pointer transition-transform hover:scale-[1.01]"
                 >
                   <SentimentEngine
-                    stock={selectedStock}
+                    stock={stockTicker}
                     scenario={activeScenario}
+                    impact={impact}
                   />
                 </div>
               </div>
@@ -199,8 +246,9 @@ export default function App() {
                   className="cursor-pointer transition-transform hover:scale-[1.01]"
                 >
                   <GeopoliticalMap
-                    stock={selectedStock}
+                    stock={stockTicker}
                     scenario={activeScenario}
+                    impact={impact}
                   />
                 </div>
                 <div
@@ -210,9 +258,10 @@ export default function App() {
                   className="cursor-pointer transition-transform hover:scale-[1.01]"
                 >
                   <SupplyChainTracker
-                    stock={selectedStock}
+                    stock={stockTicker}
                     scenario={activeScenario}
-                    customShock={customShock}
+                    customShock={selection.custom}
+                    impact={impact}
                   />
                 </div>
               </div>
@@ -241,8 +290,9 @@ export default function App() {
                   className="cursor-pointer transition-transform hover:scale-[1.01]"
                 >
                   <VolatilityMonitor
-                    stock={selectedStock}
+                    stock={stockTicker}
                     scenario={activeScenario}
+                    impact={impact}
                   />
                 </div>
               </div>
@@ -263,16 +313,17 @@ export default function App() {
                   onClick={() => setExpandedModule("macro")}
                   className="cursor-pointer transition-transform hover:scale-[1.01]"
                 >
-                  <MacroCorrelation stock={selectedStock} />
+                  <MacroCorrelation stock={stockTicker} />
                 </div>
                 <div
                   onClick={() => setExpandedModule("simulator")}
                   className="cursor-pointer transition-transform hover:scale-[1.01]"
                 >
                   <ScenarioSimulator
-                    stock={selectedStock}
+                    stock={stockTicker}
                     activeScenario={activeScenario}
-                    customShock={customShock}
+                    customShock={selection.custom}
+                    impact={impact}
                   />
                 </div>
               </div>
@@ -327,15 +378,17 @@ export default function App() {
           </DialogDescription>
           {expandedModule === "forecasting" && (
             <ForecastingEngineDetailed
-              stock={selectedStock}
+              stock={stockTicker}
               scenario={activeScenario}
-              customShock={customShock}
+              customShock={selection.custom}
+              impact={impact}
             />
           )}
           {expandedModule === "sentiment" && (
             <SentimentEngineDetailed
-              stock={selectedStock}
+              stock={stockTicker}
               scenario={activeScenario}
+              impact={impact}
             />
           )}
           {expandedModule === "policy" && (
@@ -343,32 +396,36 @@ export default function App() {
           )}
           {expandedModule === "simulator" && (
             <ShockSimulatorDetailed
-              stock={selectedStock}
+              stock={stockTicker}
               activeScenario={activeScenario}
-              customShock={customShock}
-              setCustomShock={setCustomShock}
+              customShock={selection.custom}
+              setCustomShock={(shock) => setSelection((prev) => ({ ...prev, custom: shock }))}
+              impact={impact}
             />
           )}
           {expandedModule === "macro" && (
-            <MacroCorrelationDetailed stock={selectedStock} />
+            <MacroCorrelationDetailed stock={stockTicker} />
           )}
           {expandedModule === "volatility" && (
             <VolatilityMonitorDetailed
-              stock={selectedStock}
+              stock={stockTicker}
               scenario={activeScenario}
+              impact={impact}
             />
           )}
           {expandedModule === "supplychain" && (
             <SupplyChainTrackerDetailed
-              stock={selectedStock}
+              stock={stockTicker}
               scenario={activeScenario}
-              customShock={customShock}
+              customShock={selection.custom}
+              impact={impact}
             />
           )}
           {expandedModule === "geopolitical" && (
             <GeopoliticalMapDetailed
-              stock={selectedStock}
+              stock={stockTicker}
               scenario={activeScenario}
+              impact={impact}
             />
           )}
         </DialogContent>

@@ -10,42 +10,28 @@ import {
   Legend,
 } from "recharts";
 import type { ScenarioType } from "../../App";
+import type { ScenarioImpact } from "../../utils/scenario";
 
 interface SupplyChainTrackerProps {
   stock: string;
   scenario: ScenarioType;
-  customShock: {
-    freight: number;
-    sentiment: number;
-    sanctions: number;
-  };
+  customShock: Record<string, number>;
+  impact: ScenarioImpact;
 }
 
 export function SupplyChainTracker({
   stock,
   scenario,
   customShock,
+  impact,
 }: SupplyChainTrackerProps) {
   // Calculate SCVI based on scenario
   stock;
   
   const calculateSCVI = () => {
-    let base = 42;
-
-    if (scenario === "russia-ukraine") {
-      base = 78;
-    } else if (scenario === "us-china") {
-      base = 65;
-    } else if (scenario === "red-sea") {
-      base = 71;
-    } else if (scenario === "custom") {
-      base =
-        base +
-        customShock.freight * 0.35 +
-        customShock.sanctions * 0.25;
-    }
-
-    return Math.min(100, Math.round(base));
+    const base = 42 + (scenario === "baseline" ? 0 : impact.supply_chain * 0.7);
+    const extra = (customShock.freight ?? 0) * 0.2 + (customShock.sanctions ?? 0) * 0.2;
+    return Math.min(100, Math.round(base + extra));
   };
 
   const scvi = calculateSCVI();
@@ -55,46 +41,22 @@ export function SupplyChainTracker({
     {
       name: "Supplier Concentration",
       baseline: 45,
-      current:
-        scenario === "russia-ukraine"
-          ? 75
-          : scenario === "us-china"
-            ? 60
-            : scenario === "red-sea"
-              ? 50
-              : 45,
+      current: 45 + (scenario === "baseline" ? 0 : impact.supply_chain * 0.5),
     },
     {
       name: "Freight Costs",
       baseline: 35,
-      current:
-        scenario === "red-sea"
-          ? 85
-          : scenario === "russia-ukraine"
-            ? 65
-            : scenario === "custom"
-              ? 35 + customShock.freight * 0.5
-              : 35,
+      current: 35 + (customShock.freight ?? 0) * 0.5 + impact.supply_chain * 0.2,
     },
     {
       name: "Energy Volatility",
       baseline: 40,
-      current:
-        scenario === "russia-ukraine"
-          ? 80
-          : scenario === "red-sea"
-            ? 70
-            : 40,
+      current: 40 + (scenario === "baseline" ? 0 : impact.supply_chain * 0.45),
     },
     {
       name: "Commodity Access",
       baseline: 38,
-      current:
-        scenario === "russia-ukraine"
-          ? 72
-          : scenario === "us-china"
-            ? 65
-            : 38,
+      current: 38 + (scenario === "baseline" ? 0 : impact.supply_chain * 0.4),
     },
   ];
 
@@ -102,17 +64,17 @@ export function SupplyChainTracker({
   const bottlenecks = [
     {
       region: "Eastern Europe",
-      severity: scenario === "russia-ukraine" ? 85 : 25,
+      severity: scenario === "baseline" ? 25 : Math.min(100, 25 + impact.supply_chain * 0.8),
       issue: "Titanium supply disruption",
     },
     {
       region: "South China Sea",
-      severity: scenario === "us-china" ? 75 : 30,
+      severity: scenario === "baseline" ? 30 : Math.min(100, 30 + impact.supply_chain * 0.6),
       issue: "Export control restrictions",
     },
     {
       region: "Red Sea / Suez",
-      severity: scenario === "red-sea" ? 90 : 35,
+      severity: scenario === "baseline" ? 35 : Math.min(100, 35 + impact.supply_chain * 0.7),
       issue: "Shipping route attacks",
     },
     {

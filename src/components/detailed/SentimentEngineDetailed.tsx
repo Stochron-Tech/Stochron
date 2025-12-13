@@ -18,6 +18,7 @@ import {
   ComposedChart,
 } from "recharts";
 import type { ScenarioType } from "../../App";
+import type { ScenarioImpact } from "../../utils/scenario";
 import {
   Accordion,
   AccordionContent,
@@ -28,11 +29,13 @@ import {
 interface SentimentEngineDetailedProps {
   stock: string;
   scenario: ScenarioType;
+  impact: ScenarioImpact;
 }
 
 export function SentimentEngineDetailed({
   stock,
   scenario,
+  impact,
 }: SentimentEngineDetailedProps) {
   const [expandedCategories, setExpandedCategories] = useState<
     string[]
@@ -44,6 +47,9 @@ export function SentimentEngineDetailed({
   const scenarioUpper = scenario
     ? scenario.charAt(0).toUpperCase() + scenario.slice(1)
     : "Base";
+
+  const sentimentScale = 1 + impact.sentiment / 100;
+  const exportScale = 1 + impact.supply_chain / 120;
 
   expandedCategories;
   stockUpper;
@@ -81,8 +87,10 @@ export function SentimentEngineDetailed({
 
       data.push({
         year,
-        sentiment: Number(sentimentScore.toFixed(1)),
-        exports: exportVolume,
+        sentiment: Number(
+          (sentimentScore * sentimentScale).toFixed(1),
+        ),
+        exports: Math.round(exportVolume * exportScale),
       });
     }
     return data;

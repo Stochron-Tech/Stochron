@@ -12,21 +12,20 @@ import {
   Legend,
 } from "recharts";
 import type { ScenarioType } from "../../App";
+import type { ScenarioImpact } from "../../utils/scenario";
 
 interface ForecastingEngineProps {
   stock: string;
   scenario: ScenarioType;
-  customShock: {
-    freight: number;
-    sentiment: number;
-    sanctions: number;
-  };
+  customShock: Record<string, number>;
+  impact: ScenarioImpact;
 }
 
 export function ForecastingEngine({
   stock,
   scenario,
   customShock,
+  impact,
 }: ForecastingEngineProps) {
   // Generate mock forecast data based on scenario
   const generateForecastData = () => {
@@ -43,21 +42,8 @@ export function ForecastingEngine({
       let shock = baseline;
 
       if (i > 0) {
-        // Apply scenario impacts
-        if (scenario === "russia-ukraine") {
-          shock = baseline - 25 - (i / 365) * 10;
-        } else if (scenario === "us-china") {
-          shock = baseline - 18 - (i / 365) * 8;
-        } else if (scenario === "red-sea") {
-          shock = baseline - 12 - (i / 365) * 5;
-        } else if (scenario === "custom") {
-          const impact =
-            (customShock.freight * 0.15 +
-              customShock.sentiment * 0.2 +
-              customShock.sanctions * 0.25) /
-            100;
-          shock = baseline * (1 - impact);
-        }
+        const delta = scenario === "baseline" ? 0 : impact.forecast;
+        shock = baseline + delta;
       }
 
       const upperBound = (i > 0 ? shock : baseline) * 1.15;

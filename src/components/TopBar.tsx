@@ -6,21 +6,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import type { Stock } from "../types";
 
 interface TopBarProps {
-  selectedStock: string;
-  setSelectedStock: (stock: string) => void;
+  stocks: Stock[];
+  selectedStockId: number | null;
+  setSelectedStockId: (stockId: number) => void;
   dateRange: { start: string; end: string };
   setDateRange: (range: { start: string; end: string }) => void;
 }
 
 export function TopBar({
-  selectedStock,
-  setSelectedStock,
+  stocks,
+  selectedStockId,
+  setSelectedStockId,
   dateRange,
   setDateRange,
 }: TopBarProps) {
   setDateRange;
+  const selectedStock = stocks.find((s) => s.id === selectedStockId);
   return (
     <div className="border-b border-gray-800 bg-[#0d1117] px-6 py-4">
       <div className="flex items-center justify-between">
@@ -47,21 +51,18 @@ export function TopBar({
               Stock:
             </label>
             <Select
-              value={selectedStock}
-              onValueChange={setSelectedStock}
+              value={selectedStockId?.toString() || ""}
+              onValueChange={(value) => setSelectedStockId(Number(value))}
             >
               <SelectTrigger className="w-32 border-gray-700 bg-[#161b22] text-gray-100">
-                <SelectValue />
+                <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent className="border-gray-700 bg-[#161b22]">
-                <SelectItem value="BA">Boeing (BA)</SelectItem>
-                <SelectItem value="AAPL">
-                  Apple (AAPL)
-                </SelectItem>
-                <SelectItem value="TSLA">
-                  Tesla (TSLA)
-                </SelectItem>
-                <SelectItem value="XOM">Exxon (XOM)</SelectItem>
+                {stocks.map((s) => (
+                  <SelectItem key={s.id} value={s.id.toString()}>
+                    {s.name} ({s.ticker})
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

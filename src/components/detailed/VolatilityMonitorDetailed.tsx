@@ -31,15 +31,18 @@ import {
   TabsList,
   TabsTrigger,
 } from "../ui/tabs";
+import type { ScenarioImpact } from "../../utils/scenario";
 
 interface VolatilityMonitorDetailedProps {
   stock: string;
   scenario: ScenarioType;
+  impact: ScenarioImpact;
 }
 
 export function VolatilityMonitorDetailed({
   stock,
   scenario,
+  impact,
 }: VolatilityMonitorDetailedProps) {
   const [overlayEvents, setOverlayEvents] = useState(true);
   const [viewMode, setViewMode] = useState<

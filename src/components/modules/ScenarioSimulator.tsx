@@ -10,76 +10,31 @@ import {
   YAxis,
 } from "recharts";
 import type { ScenarioType } from "../../App";
+import type { ScenarioImpact } from "../../utils/scenario";
 
 interface ScenarioSimulatorProps {
   stock: string;
   activeScenario: ScenarioType;
-  customShock: {
-    freight: number;
-    sentiment: number;
-    sanctions: number;
-  };
+  customShock: Record<string, number>;
+  impact: ScenarioImpact;
 }
 
 export function ScenarioSimulator({
   stock,
   activeScenario,
   customShock,
+  impact,
 }: ScenarioSimulatorProps) {
   // Calculate impact scores for each module based on scenario
 
   stock;
-  
-  const calculateModuleImpacts = () => {
-    const impacts = {
-      baseline: {
-        forecast: 0,
-        sentiment: 0,
-        geopolitical: 25,
-        supplyChain: 42,
-        volatility: 18,
-      },
-      "russia-ukraine": {
-        forecast: -14.2,
-        sentiment: -45,
-        geopolitical: 68,
-        supplyChain: 78,
-        volatility: 33,
-      },
-      "us-china": {
-        forecast: -10.3,
-        sentiment: -32,
-        geopolitical: 61,
-        supplyChain: 65,
-        volatility: 28,
-      },
-      "red-sea": {
-        forecast: -6.9,
-        sentiment: -22,
-        geopolitical: 52,
-        supplyChain: 71,
-        volatility: 23,
-      },
-      custom: {
-        forecast: -(
-          customShock.freight * 0.08 +
-          customShock.sentiment * 0.1 +
-          customShock.sanctions * 0.12
-        ),
-        sentiment: customShock.sentiment,
-        geopolitical: 25 + customShock.sanctions * 0.4,
-        supplyChain:
-          42 +
-          customShock.freight * 0.35 +
-          customShock.sanctions * 0.25,
-        volatility: 18 + Math.abs(customShock.sentiment) * 0.15,
-      },
-    };
-
-    return impacts[activeScenario];
+  const impacts = {
+    forecast: impact.forecast,
+    sentiment: impact.sentiment,
+    geopolitical: impact.geopolitical,
+    supplyChain: impact.supply_chain,
+    volatility: impact.volatility,
   };
-
-  const impacts = calculateModuleImpacts();
 
   // Scenario comparison data
   const comparisonData = [

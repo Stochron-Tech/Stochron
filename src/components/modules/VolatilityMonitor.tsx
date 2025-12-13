@@ -15,15 +15,18 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { ScenarioType } from "../../App";
+import type { ScenarioImpact } from "../../utils/scenario";
 
 interface VolatilityMonitorProps {
   stock: string;
   scenario: ScenarioType;
+  impact: ScenarioImpact;
 }
 
 export function VolatilityMonitor({
   stock,
   scenario,
+  impact,
 }: VolatilityMonitorProps) {
   // Generate volatility data
   stock;
@@ -37,13 +40,8 @@ export function VolatilityMonitor({
       date.setDate(date.getDate() + i);
 
       let vix = 18 + Math.sin(i / 10) * 5;
-
-      if (scenario === "russia-ukraine" && i > -20) {
-        vix += 15;
-      } else if (scenario === "us-china" && i > -20) {
-        vix += 10;
-      } else if (scenario === "red-sea" && i > -20) {
-        vix += 8;
+      if (scenario !== "baseline" && i > -20) {
+        vix += impact.volatility * 0.6;
       }
 
       data.push({
@@ -60,16 +58,7 @@ export function VolatilityMonitor({
   const currentVIX = data[data.length - 1].vix;
 
   // Calculate realized volatility (typically lower than implied during stress)
-  const realizedVol =
-    scenario === "baseline"
-      ? currentVIX - 2
-      : scenario === "russia-ukraine"
-        ? currentVIX - 8
-        : scenario === "us-china"
-          ? currentVIX - 6
-          : scenario === "red-sea"
-            ? currentVIX - 5
-            : currentVIX - 2;
+  const realizedVol = currentVIX - (scenario === "baseline" ? 2 : impact.volatility * 0.3);
 
   // Current volatility metrics
   const currentVol = {
@@ -78,16 +67,7 @@ export function VolatilityMonitor({
   };
 
   // Calculate liquidity stress
-  const liquidityStress =
-    scenario === "baseline"
-      ? 28
-      : scenario === "russia-ukraine"
-        ? 72
-        : scenario === "us-china"
-          ? 61
-          : scenario === "red-sea"
-            ? 55
-            : 35;
+  const liquidityStress = scenario === "baseline" ? 28 : Math.min(90, 28 + impact.volatility * 1.8);
 
   // Options data
   const optionsData = [
@@ -184,8 +164,7 @@ export function VolatilityMonitor({
             Volatility Regime (60D)
           </span>
           <span className="text-xs text-gray-500">
-            {scenario !== "baseline" &&
-              `Scenario: ${scenario.replace("-", " ").toUpperCase()}`}
+            {scenario !== "baseline" && `Combined shocks active`}
           </span>
         </div>
         <div className="h-40">
