@@ -1,212 +1,365 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Activity } from 'lucide-react';
+import { Play, Activity, ExternalLink } from 'lucide-react';
 
-interface RunningModule {
-  name: string;
-  color: string;
-  bgColor: string;
-  icon: string;
+// Custom Node Components
+interface NodeComponentProps {
+  module: {
+    id: string;
+    name: string;
+    description: string;
+    bgColor: string;
+    icon: string;
+    link?: string;
+  };
+  isRunningModule: boolean;
+  isRunning: boolean;
+  onNavigate: () => void;
+  position: { x: number; y: number };
+}
+
+function AgentNode({ isRunning }: { isRunning: boolean }) {
+  return (
+    <div className="absolute" style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+      <div className={`w-60 h-32 rounded-2xl bg-gradient-to-r from-blue-500 to-teal-500 flex flex-col items-center justify-center shadow-lg border-4 border-white transition-all ${isRunning ? 'animate-pulse ring-4 ring-blue-300' : ''}`}>
+        <Activity className="w-10 h-10 text-blue mb-2" />
+        <p className="text-sm font-bold text-blue text-center">AI Agent</p>
+        <p className="text-xs text-blue/90 text-center px-2">Decision Orchestrator</p>
+        <p className="text-xs text-blue/80 text-center">
+          {isRunning ? 'Running Analysis...' : 'Ready'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ToolNode({ module, isRunningModule, isRunning, onNavigate, position }: NodeComponentProps) {
+  return (
+    <div className="absolute" style={{ left: `${position.x}%`, top: `${position.y}%`, transform: 'translate(-50%, -50%)', zIndex: 20 }}>
+      <button 
+        onClick={onNavigate}
+        disabled={!module.link || isRunning}
+        className={`w-60 h-32 rounded-2xl ${module.bgColor} flex flex-col items-center justify-center shadow-lg border-4 border-white transition-all duration-300 relative ${
+          isRunningModule ? 'ring-4 ring-yellow-300 scale-105 shadow-2xl' : 'hover:shadow-xl hover:scale-102'
+        } ${module.link ? 'cursor-pointer' : 'cursor-default'} ${!module.link || isRunning ? 'disabled:opacity-50' : ''}`}
+      >
+        <div className="text-3xl mb-1">{module.icon}</div>
+        <p className="text-sm font-bold text-blue text-center px-2 leading-tight">{module.name}</p>
+        <p className="text-xs text-blue/90 text-center px-2 leading-tight">{module.description}</p>
+        <p className="text-xs text-blue/80 text-center">
+          {isRunningModule ? 'Processing...' : 'Idle'}
+        </p>
+
+        {isRunningModule && (
+          <div className="absolute inset-0 rounded-2xl border-2 border-yellow-300 animate-pulse"></div>
+        )}
+
+        {module.link && (
+          <div className="absolute -top-2 -right-2 flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] font-semibold text-slate-700 shadow-md">
+            <ExternalLink className="h-3 w-3" />
+            Open
+          </div>
+        )}
+      </button>
+    </div>
+  );
 }
 
 export default function AgenticManagerPage() {
   const navigate = useNavigate();
-  const [timePeriod, setTimePeriod] = useState('7days');
+  const [days, setDays] = useState(7);
   const [isRunning, setIsRunning] = useState(false);
-  const [runningModules, setRunningModules] = useState<RunningModule[]>([]);
-  const [dominantColor, setDominantColor] = useState('from-blue-600 to-teal-600');
+  const [runningModules, setRunningModules] = useState<Set<string>>(new Set());
+  const runIntervalRef = useRef<number | null>(null);
+  const runTimeoutRef = useRef<number | null>(null);
 
-  const modules = [
-    { name: 'RSS Feeds', color: '#3B82F6', bgColor: 'from-blue-500 to-blue-600', icon: '📰' },
-    { name: 'Geo Shock Simulator', color: '#F59E0B', bgColor: 'from-amber-500 to-orange-600', icon: '⚡', link: '/dashboard' },
-    { name: 'Digital Twin', color: '#10B981', bgColor: 'from-green-500 to-emerald-600', icon: '🔄', link: '/digital-twin' },
-  ];
+  const modules = useMemo(
+    () => [
+      {
+        id: 'rss',
+        name: 'RSS Feeds',
+        description: 'Real-time News Data',
+        color: '#3B82F6',
+        bgColor: 'bg-blue-500',
+        textColor: 'text-blue-600',
+        icon: '📰',
+        position: { x: 15, y: 50 },
+      },
+      {
+        id: 'geoshock',
+        name: 'Geo Shock Simulator',
+        description: 'Event Impact Analysis',
+        color: '#F59E0B',
+        bgColor: 'bg-amber-500',
+        textColor: 'text-amber-600',
+        icon: '⚡',
+        link: '/geopolitical-analysis',
+        position: { x: 50, y: 15 },
+      },
+      {
+        id: 'digitaltwin',
+        name: 'Digital Twin',
+        description: 'Business Simulation',
+        color: '#10B981',
+        bgColor: 'bg-emerald-500',
+        textColor: 'text-emerald-600',
+        icon: '🔄',
+        link: '/digital-twin',
+        position: { x: 85, y: 50 },
+      },
+    ],
+    []
+  );
 
-  const handleRun = async () => {
-    setIsRunning(true);
-    setRunningModules([]);
-
-    // Simulate sequential module activation
-    for (let i = 0; i < modules.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setRunningModules(prev => [...prev, modules[i]]);
-      
-      // Update background color based on the running module
-      if (i === 0) setDominantColor('from-blue-600 to-blue-700');
-      else if (i === 1) setDominantColor('from-amber-600 to-orange-700');
-      else if (i === 2) setDominantColor('from-green-600 to-emerald-700');
+  const pickRandomModules = (count: number) => {
+    const result = new Set<string>();
+    while (result.size < count) {
+      const idx = Math.floor(Math.random() * modules.length);
+      result.add(modules[idx].name);
     }
-
-    // Simulate completion
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsRunning(false);
-    setRunningModules([]);
+    return result;
   };
 
+  const handleRun = () => {
+    if (isRunning) return;
+
+    setIsRunning(true);
+    setRunningModules(new Set());
+
+    if (runIntervalRef.current) {
+      window.clearInterval(runIntervalRef.current);
+    }
+    if (runTimeoutRef.current) {
+      window.clearTimeout(runTimeoutRef.current);
+    }
+
+    runIntervalRef.current = window.setInterval(() => {
+      const randomCount = 1 + Math.floor(Math.random() * 2);
+      setRunningModules(pickRandomModules(randomCount));
+    }, 500);
+
+    runTimeoutRef.current = window.setTimeout(() => {
+      if (runIntervalRef.current) {
+        window.clearInterval(runIntervalRef.current);
+      }
+      setIsRunning(false);
+      setRunningModules(new Set());
+    }, 5200);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (runIntervalRef.current) {
+        window.clearInterval(runIntervalRef.current);
+      }
+      if (runTimeoutRef.current) {
+        window.clearTimeout(runTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50">
       {/* Navigation */}
-      <nav className="border-b border-slate-700 bg-slate-800/50 backdrop-blur-md sticky top-0 z-50">
+      <nav className="border-b border-slate-200 bg-white/60 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Home
-          </button>
-          <h1 className="text-xl font-bold text-white">Agentic Workflow Manager</h1>
-          <div className="w-20"></div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center">
+              <Activity className="w-6 h-6 text-blue" />
+            </div>
+            <h1 className="text-lg font-bold text-slate-900">Agentic Workflow Manager</h1>
+          </div>
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-6 py-16">
         {/* Header Section */}
         <div className="mb-12 text-center space-y-4">
-          <h2 className="text-4xl font-bold text-white">Agentic Decision Workflow</h2>
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+          <div className="inline-block px-4 py-2 bg-blue-100 rounded-full border border-blue-300 mb-4">
+            <span className="text-sm font-semibold text-blue-700">AI Decision Engine</span>
+          </div>
+          <h2 className="text-5xl lg:text-6xl font-bold text-slate-900">Agentic Decision Workflow</h2>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Watch how our AI agent orchestrates multiple tools to synthesize geopolitical intelligence and deliver pricing recommendations
           </p>
         </div>
 
         {/* Controls Section */}
-        <div className="bg-slate-800/50 backdrop-blur-md rounded-2xl border border-slate-700 p-8 mb-16">
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-3">
-                Analysis Time Period
+        <div className="bg-white rounded-2xl border-2 border-slate-200 p-8 mb-16 shadow-md">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
+                Number of Days to Analyze
               </label>
-              <select
-                value={timePeriod}
-                onChange={(e) => setTimePeriod(e.target.value)}
+              <input
+                type="number"
+                value={days}
+                onChange={(e) => setDays(Math.max(1, parseInt(e.target.value) || 1))}
                 disabled={isRunning}
-                className="w-full md:w-64 px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                <option value="24hours">Last 24 Hours</option>
-                <option value="7days">Last 7 Days</option>
-                <option value="30days">Last 30 Days</option>
-                <option value="90days">Last 90 Days</option>
-              </select>
+                min="1"
+                max="365"
+                className="w-full md:w-48 px-4 py-3 bg-slate-50 border-2 border-slate-300 rounded-lg text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              />
             </div>
 
             <button
               onClick={handleRun}
               disabled={isRunning}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold inline-flex items-center gap-2"
+              className="px-8 py-4 bg-red-600 hover:bg-red-700 text-blue rounded-xl hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg inline-flex items-center gap-3 min-w-[140px] justify-center border-2 border-red-700 shadow-lg"
             >
-              <Play className="w-4 h-4" />
-              {isRunning ? 'Running Analysis...' : 'Run Analysis'}
+              <Play className="w-5 h-5" />
+              {isRunning ? 'Running...' : 'Run Analysis'}
             </button>
           </div>
         </div>
 
-        {/* Visualization Section */}
-        <div className={`rounded-3xl border border-slate-700 p-12 transition-all duration-500 ${isRunning ? `bg-gradient-to-br ${dominantColor} bg-opacity-10 border-opacity-50` : 'bg-slate-800/30'}`}>
-          <div className="flex flex-col items-center justify-center space-y-12 min-h-96">
-            {/* Central Agent Node */}
-            <div className="relative w-32 h-32 flex items-center justify-center">
-              <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-teal-500 opacity-20 ${isRunning ? 'animate-pulse' : ''}`}></div>
-              <div className="relative w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-teal-600 flex items-center justify-center shadow-lg border-2 border-blue-300/50">
-                <Activity className="w-12 h-12 text-white" />
-              </div>
-              <div className="absolute inset-0 rounded-full border-2 border-blue-400/30 animate-spin" style={{ animationDuration: '4s' }}></div>
-            </div>
+        {/* Visualization Section - Custom Star Graph */}
+        <div className="bg-white rounded-3xl border-2 border-slate-200 p-8 shadow-md mb-16">
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-slate-900">Agent ↔ Tool Graph</h3>
+            <p className="text-sm text-slate-600">The agent orchestrates three tools in a star topology.</p>
+          </div>
+          
+          <div className="w-full" style={{ height: '600px' }}>
+            <div className="h-full w-full border-2 border-slate-100 rounded-xl relative bg-gradient-to-br from-slate-50 to-blue-50 overflow-visible" style={{ position: 'relative', minHeight: '600px' }}>
+            
+            {/* Agent in Center */}
+            <AgentNode isRunning={isRunning} />
 
-            <div className="text-center text-slate-200 font-semibold">Agentic Manager</div>
+            {/* Tool Nodes positioned around agent */}
+            {modules.map((module) => (
+              <ToolNode
+                key={module.id}
+                module={module}
+                isRunningModule={runningModules.has(module.name)}
+                isRunning={isRunning}
+                onNavigate={() => module.link && navigate(module.link)}
+                position={module.position}
+              />
+            ))}
 
-            {/* Tool Nodes */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+            {/* Connection Lines */}
+            <svg 
+              className="absolute inset-0 w-full h-full pointer-events-none" 
+              style={{ zIndex: 5 }}
+            >
+              <defs>
+                <marker
+                  id="arrowhead"
+                  markerWidth="10"
+                  markerHeight="7" 
+                  refX="9"
+                  refY="3.5"
+                  orient="auto"
+                >
+                  <polygon 
+                    points="0 0, 10 3.5, 0 7" 
+                    fill="#cbd5e1" 
+                  />
+                </marker>
+              </defs>
+              
+              {/* Lines from center agent to each tool */}
               {modules.map((module) => {
-                const isRunning = runningModules.some(m => m.name === module.name);
+                const isAnimated = isRunning && runningModules.has(module.name);
                 return (
-                  <div key={module.name} className="flex flex-col items-center">
-                    {/* Connection line */}
-                    <div className={`h-12 w-1 ${isRunning ? `bg-gradient-to-b ${module.bgColor}` : 'bg-slate-600'} transition-all`}></div>
-
-                    {/* Tool Node */}
-                    <button
-                      onClick={() => {
-                        const link = (module as any).link;
-                        if (link && !isRunning) navigate(link);
-                      }}
-                      className={`relative w-24 h-24 rounded-full flex items-center justify-center text-3xl transition-all ${
-                        isRunning
-                          ? `bg-gradient-to-br ${module.bgColor} shadow-2xl scale-110`
-                          : 'bg-slate-700 hover:bg-slate-600 shadow-lg'
-                      } border-2 ${isRunning ? 'border-white/50' : 'border-slate-600'} group`}
-                    >
-                      {module.icon}
-
-                      {/* LED Light Effect */}
-                      {isRunning && (
-                        <>
-                          <div className="absolute inset-0 rounded-full opacity-50 animate-pulse" style={{ background: module.color }}></div>
-                          <div className="absolute -inset-1 rounded-full border-2" style={{ borderColor: module.color, opacity: 0.7 }}></div>
-                        </>
-                      )}
-
-                      {/* Tooltip for clickable modules */}
-                      {(module as any).link && !isRunning && (
-                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-slate-700 text-xs text-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          Click to explore
-                        </div>
-                      )}
-                    </button>
-
-                    <div className="mt-4 text-center">
-                      <p className="text-sm font-medium text-slate-200">{module.name}</p>
-                      {isRunning && (
-                        <p className="text-xs text-emerald-400 mt-1 font-semibold">● Running</p>
-                      )}
-                    </div>
-                  </div>
+                  <line
+                    key={`line-${module.id}`}
+                    x1="50%"
+                    y1="50%"
+                    x2={`${module.position.x}%`}
+                    y2={`${module.position.y}%`}
+                    stroke={isAnimated ? '#f59e0b' : '#cbd5e1'}
+                    strokeWidth={isAnimated ? 4 : 3}
+                    markerEnd="url(#arrowhead)"
+                    className={isAnimated ? 'animate-pulse' : ''}
+                  />
                 );
               })}
+            </svg>
+
+            {/* Status indicator */}
+            <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg" style={{ zIndex: 30 }}>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                <span className="text-sm font-medium text-slate-700">
+                  {isRunning ? 'Analysis Running' : 'System Ready'}
+                </span>
+              </div>
+              {runningModules.size > 0 && (
+                <p className="text-xs text-slate-500 mt-1">
+                  Active: {Array.from(runningModules).join(', ')}
+                </p>
+              )}
             </div>
           </div>
+          </div>
         </div>
-
-        {/* Explanation Section */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
               title: 'Step 1: Data Aggregation',
               description: 'The agent pulls real-time data from RSS feeds tracking geopolitical events, market movements, and supply chain disruptions',
-              icon: '📊'
+              icon: '📊',
+              color: 'from-blue-100 to-cyan-100',
+              border: 'border-blue-300'
             },
             {
               title: 'Step 2: Shock Analysis',
               description: 'The Geopolitical Shock Simulator analyzes how current events could impact business operations and supply chains',
-              icon: '⚡'
+              icon: '⚡',
+              color: 'from-amber-100 to-orange-100',
+              border: 'border-amber-300'
             },
             {
               title: 'Step 3: Digital Twin Simulation',
               description: 'The Digital Twin models your business under different geopolitical scenarios to predict pricing impacts',
-              icon: '🔄'
+              icon: '🔄',
+              color: 'from-emerald-100 to-teal-100',
+              border: 'border-emerald-300'
             }
           ].map((step, idx) => (
-            <div key={idx} className="bg-slate-800/50 backdrop-blur-md rounded-xl border border-slate-700 p-6 hover:border-slate-600 transition-colors">
-              <div className="text-2xl mb-3">{step.icon}</div>
-              <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
-              <p className="text-slate-400 text-sm">{step.description}</p>
+            <div key={idx} className={`bg-gradient-to-br ${step.color} rounded-xl border-2 ${step.border} p-6 hover:shadow-md transition-all`}>
+              <div className="text-3xl mb-4">{step.icon}</div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">{step.title}</h3>
+              <p className="text-slate-700 text-sm">{step.description}</p>
             </div>
           ))}
         </div>
 
         {/* Action Section */}
-        <div className="mt-16 bg-gradient-to-r from-blue-600/20 to-teal-600/20 border border-blue-500/30 rounded-2xl p-12 text-center">
-          <h3 className="text-2xl font-bold text-white mb-4">Ready to see your pricing recommendations?</h3>
-          <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
-            Run the workflow above to see how the agent synthesizes data. Then explore your Digital Twin to understand the specific impact on your business.
+        <div className="mt-16 bg-gradient-to-r from-blue-100 to-teal-100 border-2 border-blue-300 rounded-2xl p-12 text-center shadow-md">
+          <h3 className="text-2xl font-bold text-slate-900 mb-4">Ready to explore the system?</h3>
+          <p className="text-slate-700 mb-6 max-w-2xl mx-auto text-lg">
+            Run the workflow above to see how the agent orchestrates the analysis. Then click on the modules to explore each component in detail.
           </p>
-          <button
-            onClick={() => navigate('/digital-twin')}
-            className="px-8 py-3 bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-shadow font-semibold"
-          >
-            Explore Digital Twin
-          </button>
+          <div className="flex flex-col md:flex-row gap-4 justify-center">
+            <button
+              onClick={() => navigate('/geopolitical-analysis')}
+              className="px-8 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-blue rounded-lg hover:shadow-lg transition-shadow font-semibold"
+            >
+              Geo Shock Simulator
+            </button>
+            <button
+              onClick={() => navigate('/digital-twin')}
+              className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-blue rounded-lg hover:shadow-lg transition-shadow font-semibold"
+            >
+              Digital Twin
+            </button>
+          </div>
         </div>
       </main>
+      
+      <style>{`
+        @keyframes dashArray {
+          0% {
+            stroke-dashoffset: 12;
+          }
+          100% {
+            stroke-dashoffset: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }
