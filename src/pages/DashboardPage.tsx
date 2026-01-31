@@ -1,31 +1,30 @@
 import { useEffect, useState } from "react";
-import { TopBar } from "./components/TopBar";
-import { ScenarioPanel } from "./components/ScenarioPanel";
-import { ForecastingEngine } from "./components/modules/ForecastingEngine";
-import { SentimentEngine } from "./components/modules/SentimentEngine";
-import { GeopoliticalMap } from "./components/modules/GeopoliticalMap";
-import { SupplyChainTracker } from "./components/modules/SupplyChainTracker";
-import { PolicyTracker } from "./components/modules/PolicyTracker";
-import { VolatilityMonitor } from "./components/modules/VolatilityMonitor";
-import { MacroCorrelation } from "./components/modules/MacroCorrelation";
-import { ScenarioSimulator } from "./components/modules/ScenarioSimulator";
+import { TopBar } from "../components/TopBar";
+import { ScenarioPanel } from "../components/ScenarioPanel";
+import { ForecastingEngine } from "../components/modules/ForecastingEngine";
+import { SentimentEngine } from "../components/modules/SentimentEngine";
+import { GeopoliticalMap } from "../components/modules/GeopoliticalMap";
+import { SupplyChainTracker } from "../components/modules/SupplyChainTracker";
+import { PolicyTracker } from "../components/modules/PolicyTracker";
+import { VolatilityMonitor } from "../components/modules/VolatilityMonitor";
+import { MacroCorrelation } from "../components/modules/MacroCorrelation";
+import { ScenarioSimulator } from "../components/modules/ScenarioSimulator";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from "./components/ui/dialog";
-import { ForecastingEngineDetailed } from "./components/detailed/ForecastingEngineDetailed";
-import { SentimentEngineDetailed } from "./components/detailed/SentimentEngineDetailed";
-import { PolicyTrackerDetailed } from "./components/detailed/PolicyTrackerDetailed";
-import { ShockSimulatorDetailed } from "./components/detailed/ShockSimulatorDetailed";
-import { MacroCorrelationDetailed } from "./components/detailed/MacroCorrelationDetailed";
-import { VolatilityMonitorDetailed } from "./components/detailed/VolatilityMonitorDetailed";
-import { SupplyChainTrackerDetailed } from "./components/detailed/SupplyChainTrackerDetailed";
-import { GeopoliticalMapDetailed } from "./components/detailed/GeopoliticalMapDetailed";
+} from "../components/ui/dialog";
+import { ForecastingEngineDetailed } from "../components/detailed/ForecastingEngineDetailed";
+import { SentimentEngineDetailed } from "../components/detailed/SentimentEngineDetailed";
+import { PolicyTrackerDetailed } from "../components/detailed/PolicyTrackerDetailed";
+import { ShockSimulatorDetailed } from "../components/detailed/ShockSimulatorDetailed";
+import { MacroCorrelationDetailed } from "../components/detailed/MacroCorrelationDetailed";
+import { VolatilityMonitorDetailed } from "../components/detailed/VolatilityMonitorDetailed";
+import { SupplyChainTrackerDetailed } from "../components/detailed/SupplyChainTrackerDetailed";
+import { GeopoliticalMapDetailed } from "../components/detailed/GeopoliticalMapDetailed";
 
-import api, { API_BASE } from "./api";
-import Login from "./components/Login";
+import api, { API_BASE } from "../api";
 
 export type ScenarioType =
   | "baseline"
@@ -45,11 +44,7 @@ export type ExpandedModule =
   | null;
 
 
-export default function App() {
-
-  // Set to false for production, true for dev bypass
-  const testing = true;
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(testing);
+export default function DashboardPage() {
 
   // Bootstrap CSRF cookie
   useEffect(() => {
@@ -57,15 +52,7 @@ export default function App() {
       method: "GET",
       credentials: "include",
     }).catch(console.error);
-    // Only check session if not testing
-    if (!testing) {
-      api.get("/api/me/").then(() => {
-        setIsLoggedIn(true);
-      }).catch(() => {
-        setIsLoggedIn(false);
-      });
-    }
-  }, [testing]);
+  }, []);
 
   const [selectedStock, setSelectedStock] = useState("BA");
   const [dateRange, setDateRange] = useState({
@@ -81,10 +68,6 @@ export default function App() {
   });
   const [expandedModule, setExpandedModule] =
     useState<ExpandedModule>(null);
-
-  if (!isLoggedIn) {
-    return <Login onLoggedIn={() => setIsLoggedIn(true)} />;
-  }
 
   return (
     <div className="min-h-screen bg-[#0a0e1a] text-gray-100">
