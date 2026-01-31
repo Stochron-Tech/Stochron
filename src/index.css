@@ -3356,3 +3356,112 @@ html {
     height: 0;
   }
 }
+
+/* Vibrant Light Blue Modern Theme */
+@layer theme {
+  :root, :host {
+    /* Primary Colors - Vibrant Blue */
+    --color-primary: #0EA5E9;
+    --color-primary-light: #38BDF8;
+    --color-primary-dark: #0284C7;
+    
+    /* Accent Colors - Vibrant & Diverse */
+    --color-accent-blue: #06B6D4;
+    --color-accent-cyan: #22D3EE;
+    --color-accent-teal: #14B8A6;
+    --color-accent-emerald: #10B981;
+    --color-accent-amber: #FBBF24;
+    --color-accent-orange: #FB923C;
+    --color-accent-rose: #F43F5E;
+    --color-accent-purple: #A855F7;
+    
+    /* Neutral Colors - Refined */
+    --color-background: #F8FAFC;
+    --color-background-alt: #F1F5F9;
+    --color-surface: #FFFFFF;
+    --color-text: #0F172A;
+    --color-text-light: #64748B;
+    --color-text-muted: #94A3B8;
+    --color-border: #E2E8F0;
+    --color-border-light: #F1F5F9;
+    
+    /* Semantic Design Tokens */
+    --background: var(--color-background);
+    --foreground: var(--color-text);
+    --primary: var(--color-primary);
+    --primary-foreground: #FFFFFF;
+    --secondary: var(--color-accent-teal);
+    --secondary-foreground: #FFFFFF;
+    --accent: var(--color-accent-cyan);
+    --accent-foreground: #FFFFFF;
+    --muted: var(--color-text-muted);
+    --muted-foreground: #FFFFFF;
+    --border: var(--color-border);
+    --ring: var(--color-primary);
+    --radius: 0.75rem;
+    
+    /* Chart Colors */
+    --chart-blue: #0EA5E9;
+    --chart-cyan: #06B6D4;
+    --chart-teal: #14B8A6;
+    --chart-emerald: #10B981;
+    --chart-amber: #FBBF24;
+    --chart-orange: #FB923C;
+    --chart-rose: #F43F5E;
+    --chart-purple: #A855F7;
+    --chart-gradient-1: linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%);
+    --chart-gradient-2: linear-gradient(135deg, #14B8A6 0%, #10B981 100%);
+    --chart-gradient-3: linear-gradient(135deg, #FBBF24 0%, #FB923C 100%);
+    --chart-gradient-4: linear-gradient(135deg, #F43F5E 0%, #A855F7 100%);
+  }
+}
+
+@layer components {
+  /* Smooth transitions */
+  * {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Card enhancement */
+  [data-card], .card {
+    background-color: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  [data-card]:hover, .card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    border-color: #cbd5e1;
+  }
+  
+  /* Enhanced buttons */
+  button {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: white;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  button:hover::before {
+    opacity: 0.1;
+  }
+  
+  /* Focus state */
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    ring: 2px solid var(--color-primary);
+    ring-offset: 2px;
+  }
+}
