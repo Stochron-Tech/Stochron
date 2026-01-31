@@ -11,36 +11,30 @@ interface RunningModule {
 
 export default function AgenticManagerPage() {
   const navigate = useNavigate();
-  const [timePeriod, setTimePeriod] = useState('7days');
+  const [days, setDays] = useState(7);
   const [isRunning, setIsRunning] = useState(false);
-  const [runningModules, setRunningModules] = useState<RunningModule[]>([]);
-  const [dominantColor, setDominantColor] = useState('from-blue-600 to-teal-600');
+  const [runningModules, setRunningModules] = useState<Set<string>>(new Set());
 
   const modules = [
-    { name: 'RSS Feeds', color: '#3B82F6', bgColor: 'from-blue-500 to-blue-600', icon: '📰' },
-    { name: 'Geo Shock Simulator', color: '#F59E0B', bgColor: 'from-amber-500 to-orange-600', icon: '⚡', link: '/geopolitical-analysis' },
-    { name: 'Digital Twin', color: '#10B981', bgColor: 'from-green-500 to-emerald-600', icon: '🔄', link: '/digital-twin' },
+    { name: 'RSS Feeds', color: '#3B82F6', bgColor: 'bg-blue-500', textColor: 'text-blue-600', icon: '📰', position: 'top' },
+    { name: 'Geo Shock Simulator', color: '#F59E0B', bgColor: 'bg-amber-500', textColor: 'text-amber-600', icon: '⚡', link: '/geopolitical-analysis', position: 'left' },
+    { name: 'Digital Twin', color: '#10B981', bgColor: 'bg-emerald-500', textColor: 'text-emerald-600', icon: '🔄', link: '/digital-twin', position: 'right' },
   ];
 
   const handleRun = async () => {
     setIsRunning(true);
-    setRunningModules([]);
+    setRunningModules(new Set());
 
     // Simulate sequential module activation
-    for (let i = 0; i < modules.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setRunningModules(prev => [...prev, modules[i]]);
-      
-      // Update background color based on the running module
-      if (i === 0) setDominantColor('from-blue-600 to-blue-700');
-      else if (i === 1) setDominantColor('from-amber-600 to-orange-700');
-      else if (i === 2) setDominantColor('from-green-600 to-emerald-700');
+    for (const module of modules) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setRunningModules(prev => new Set([...prev, module.name]));
     }
 
     // Simulate completion
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsRunning(false);
-    setRunningModules([]);
+    setRunningModules(new Set());
   };
 
   return (
@@ -70,96 +64,98 @@ export default function AgenticManagerPage() {
         </div>
 
         {/* Controls Section */}
-        <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-2xl border-2 border-blue-200 p-8 mb-16 shadow-md">
-          <div className="space-y-6">
-            <div>
+        <div className="bg-white rounded-2xl border-2 border-slate-200 p-8 mb-16 shadow-md">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="flex-1">
               <label className="block text-sm font-semibold text-slate-700 mb-3">
-                Analysis Time Period
+                Number of Days to Analyze
               </label>
-              <select
-                value={timePeriod}
-                onChange={(e) => setTimePeriod(e.target.value)}
+              <input
+                type="number"
+                value={days}
+                onChange={(e) => setDays(Math.max(1, parseInt(e.target.value) || 1))}
                 disabled={isRunning}
-                className="w-full md:w-64 px-4 py-2 bg-white border-2 border-blue-300 rounded-lg text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-              >
-                <option value="24hours">Last 24 Hours</option>
-                <option value="7days">Last 7 Days</option>
-                <option value="30days">Last 30 Days</option>
-                <option value="90days">Last 90 Days</option>
-              </select>
+                min="1"
+                max="365"
+                className="w-full md:w-48 px-4 py-3 bg-slate-50 border-2 border-slate-300 rounded-lg text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              />
             </div>
 
             <button
               onClick={handleRun}
               disabled={isRunning}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold inline-flex items-center gap-2"
+              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold inline-flex items-center gap-2 w-full md:w-auto justify-center"
             >
               <Play className="w-4 h-4" />
-              {isRunning ? 'Running Analysis...' : 'Run Analysis'}
+              {isRunning ? 'Running...' : 'Run Analysis'}
             </button>
           </div>
         </div>
 
-        {/* Visualization Section */}
-        <div className={`rounded-3xl border-2 p-12 transition-all duration-500 ${isRunning ? `bg-gradient-to-br ${dominantColor} bg-opacity-5 border-blue-300` : 'bg-white border-slate-200 shadow-md'}`}>
-          <div className="flex flex-col items-center justify-center space-y-12 min-h-96">
-            {/* Central Agent Node */}
-            <div className="relative w-32 h-32 flex items-center justify-center">
-              <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-teal-500 opacity-10 ${isRunning ? 'animate-pulse' : ''}`}></div>
-              <div className="relative w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-teal-600 flex items-center justify-center shadow-lg border-2 border-blue-300/50">
-                <Activity className="w-12 h-12 text-white" />
+        {/* Visualization Section - Graph Layout */}
+        <div className="bg-white rounded-3xl border-2 border-slate-200 p-8 shadow-md mb-16">
+          <div className="relative w-full h-96 flex items-center justify-center">
+            {/* SVG for connection lines */}
+            <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 1, pointerEvents: 'none' }}>
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <polygon points="0 0, 10 3, 0 6" fill="#cbd5e1" />
+                </marker>
+              </defs>
+              {/* Top to Center */}
+              <line x1="50%" y1="15%" x2="50%" y2="38%" stroke="#cbd5e1" strokeWidth="3" markerEnd="url(#arrowhead)" />
+              {/* Left to Center */}
+              <line x1="15%" y1="50%" x2="34%" y2="50%" stroke="#cbd5e1" strokeWidth="3" markerEnd="url(#arrowhead)" />
+              {/* Right to Center */}
+              <line x1="66%" y1="50%" x2="85%" y2="50%" stroke="#cbd5e1" strokeWidth="3" markerEnd="url(#arrowhead)" />
+            </svg>
+
+            <div className="relative w-full h-full flex items-center justify-center" style={{ zIndex: 2 }}>
+              {/* Central Agent Node */}
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className={`w-32 h-28 rounded-2xl bg-gradient-to-r from-blue-500 to-teal-500 flex items-center justify-center shadow-lg border-3 border-white transition-all ${isRunning ? 'animate-pulse ring-4 ring-blue-300' : ''}`}>
+                  <div className="text-center">
+                    <Activity className="w-10 h-10 text-white mx-auto mb-1" />
+                    <p className="text-xs font-bold text-white">Agent</p>
+                  </div>
+                </div>
               </div>
-              <div className="absolute inset-0 rounded-full border-2 border-blue-400/30 animate-spin" style={{ animationDuration: '4s' }}></div>
-            </div>
 
-            <div className="text-center text-slate-700 font-bold text-lg">Agentic Manager</div>
-
-            {/* Tool Nodes */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+              {/* Tool Nodes */}
               {modules.map((module) => {
-                const isRunningModule = runningModules.some(m => m.name === module.name);
+                const isRunningModule = runningModules.has(module.name);
+                let positionClass = '';
+                
+                if (module.position === 'top') positionClass = 'top-0 left-1/2 transform -translate-x-1/2';
+                else if (module.position === 'left') positionClass = 'left-0 top-1/2 transform -translate-y-1/2';
+                else if (module.position === 'right') positionClass = 'right-0 top-1/2 transform -translate-y-1/2';
+
                 return (
-                  <div key={module.name} className="flex flex-col items-center">
-                    {/* Connection line */}
-                    <div className={`h-12 w-1 ${isRunningModule ? `bg-gradient-to-b ${module.bgColor}` : 'bg-slate-300'} transition-all`}></div>
-
-                    {/* Tool Node */}
-                    <button
-                      onClick={() => {
-                        const link = (module as any).link;
-                        if (link && !isRunningModule) navigate(link);
-                      }}
-                      className={`relative w-24 h-24 rounded-full flex items-center justify-center text-3xl transition-all ${
-                        isRunningModule
-                          ? `bg-gradient-to-br ${module.bgColor} shadow-2xl scale-110`
-                          : 'bg-slate-100 hover:bg-slate-200 shadow-lg'
-                      } border-2 ${isRunningModule ? 'border-white/50' : 'border-slate-300'} group`}
-                    >
-                      {module.icon}
-
-                      {/* LED Light Effect */}
+                  <button
+                    key={module.name}
+                    onClick={() => {
+                      const link = (module as any).link;
+                      if (link && !isRunning) navigate(link);
+                    }}
+                    className={`absolute ${positionClass} group z-10`}
+                  >
+                    <div className={`w-32 h-28 rounded-2xl ${module.bgColor} flex flex-col items-center justify-center shadow-lg border-3 border-white transition-all duration-300 relative ${
+                      isRunningModule ? 'ring-4 ring-yellow-300 scale-110 shadow-2xl' : 'hover:shadow-xl hover:scale-105'
+                    }`}>
+                      <div className="text-3xl mb-1">{module.icon}</div>
+                      <p className="text-xs font-bold text-white text-center px-2 leading-tight">{module.name}</p>
+                      
                       {isRunningModule && (
-                        <>
-                          <div className="absolute inset-0 rounded-full opacity-50 animate-pulse" style={{ background: module.color }}></div>
-                          <div className="absolute -inset-1 rounded-full border-2" style={{ borderColor: module.color, opacity: 0.7 }}></div>
-                        </>
+                        <div className="absolute inset-0 rounded-2xl border-2 border-yellow-300 animate-pulse"></div>
                       )}
 
-                      {/* Tooltip for clickable modules */}
                       {(module as any).link && !isRunningModule && (
-                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-slate-800 text-xs text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium">
+                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-slate-800 text-xs text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium z-20">
                           Click to explore
                         </div>
                       )}
-                    </button>
-
-                    <div className="mt-4 text-center">
-                      <p className="text-sm font-semibold text-slate-700">{module.name}</p>
-                      {isRunningModule && (
-                        <p className="text-xs text-emerald-600 mt-1 font-bold">● Running</p>
-                      )}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
