@@ -3357,27 +3357,33 @@ html {
   }
 }
 
-/* Light Blue Modern Theme */
+/* Vibrant Light Blue Modern Theme */
 @layer theme {
   :root, :host {
-    /* Primary Colors */
-    --color-primary: #0369A1;
-    --color-primary-light: #06B6D4;
-    --color-primary-dark: #0C4A6E;
+    /* Primary Colors - Vibrant Blue */
+    --color-primary: #0EA5E9;
+    --color-primary-light: #38BDF8;
+    --color-primary-dark: #0284C7;
     
-    /* Accent Colors */
-    --color-accent-blue: #3B82F6;
+    /* Accent Colors - Vibrant & Diverse */
+    --color-accent-blue: #06B6D4;
+    --color-accent-cyan: #22D3EE;
     --color-accent-teal: #14B8A6;
-    --color-accent-amber: #F59E0B;
-    --color-accent-green: #10B981;
+    --color-accent-emerald: #10B981;
+    --color-accent-amber: #FBBF24;
+    --color-accent-orange: #FB923C;
+    --color-accent-rose: #F43F5E;
+    --color-accent-purple: #A855F7;
     
-    /* Neutral Colors */
-    --color-background: #F0F9FF;
-    --color-background-alt: #E0F2FE;
-    --color-text: #0C2340;
+    /* Neutral Colors - Refined */
+    --color-background: #F8FAFC;
+    --color-background-alt: #F1F5F9;
+    --color-surface: #FFFFFF;
+    --color-text: #0F172A;
     --color-text-light: #64748B;
-    --color-border: #BFDBFE;
-    --color-border-light: #DBEAFE;
+    --color-text-muted: #94A3B8;
+    --color-border: #E2E8F0;
+    --color-border-light: #F1F5F9;
     
     /* Semantic Design Tokens */
     --background: var(--color-background);
@@ -3386,20 +3392,54 @@ html {
     --primary-foreground: #FFFFFF;
     --secondary: var(--color-accent-teal);
     --secondary-foreground: #FFFFFF;
-    --accent: var(--color-accent-blue);
+    --accent: var(--color-accent-cyan);
     --accent-foreground: #FFFFFF;
-    --muted: var(--color-text-light);
+    --muted: var(--color-text-muted);
     --muted-foreground: #FFFFFF;
     --border: var(--color-border);
     --ring: var(--color-primary);
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+    
+    /* Chart Colors */
+    --chart-blue: #0EA5E9;
+    --chart-cyan: #06B6D4;
+    --chart-teal: #14B8A6;
+    --chart-emerald: #10B981;
+    --chart-amber: #FBBF24;
+    --chart-orange: #FB923C;
+    --chart-rose: #F43F5E;
+    --chart-purple: #A855F7;
+    --chart-gradient-1: linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%);
+    --chart-gradient-2: linear-gradient(135deg, #14B8A6 0%, #10B981 100%);
+    --chart-gradient-3: linear-gradient(135deg, #FBBF24 0%, #FB923C 100%);
+    --chart-gradient-4: linear-gradient(135deg, #F43F5E 0%, #A855F7 100%);
   }
 }
 
 @layer components {
   /* Smooth transitions */
   * {
-    @apply transition-colors duration-200;
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  /* Card enhancement */
+  [data-card], .card {
+    @apply bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Enhanced buttons */
+  button {
+    @apply relative overflow-hidden;
+  }
+  
+  button::before {
+    content: '';
+    @apply absolute inset-0 bg-white opacity-0 transition-opacity duration-300;
+  }
+  
+  button:hover::before {
+    @apply opacity-10;
   }
   
   /* Focus state */
