@@ -247,9 +247,9 @@ Based on comprehensive analysis of geopolitical events, market volatility, and s
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50">
       {/* Results Popup */}
       {showResultsPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div 
-            className="bg-blue-900 rounded-2xl shadow-2xl max-w-4xl w-full" 
+            className="bg-blue-900 rounded-3xl overflow-hidden shadow-2xl max-w-4xl w-full" 
             style={{ 
               backgroundColor: '#1e3a8a',
               height: '80vh',
@@ -269,7 +269,7 @@ Based on comprehensive analysis of geopolitical events, market volatility, and s
               <div className="flex justify-between items-start">
                 <div>
                   <h2 className="text-3xl font-bold text-white mb-2">📊 Analysis Complete</h2>
-                  <p className="text-blue-200">Strategic Business Policy Recommendations</p>
+                  <p className="text-white-200">Strategic Business Policy Recommendations</p>
                 </div>
                 <button
                   onClick={() => setShowResultsPopup(false)}
@@ -374,7 +374,7 @@ Based on comprehensive analysis of geopolitical events, market volatility, and s
                   downloadAnalysis();
                   setShowResultsPopup(false);
                 }}
-                className="bg-white text-blue-900 px-8 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-colors flex items-center gap-3 shadow-lg"
+                className="bg-white text-white-900 px-8 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-colors flex items-center gap-3 shadow-lg"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
